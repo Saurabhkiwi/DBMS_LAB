@@ -1,0 +1,64 @@
+SQL> create or replace function total_accd
+  2  (year in int)
+  3  return int
+  4  as total int;
+  5  begin
+  6  select count(report_number)
+  7  into total
+  8  from ACCIDENT
+  9  where extract(year from accd_date) = year;
+ 10  return total;
+ 11  end;
+ 12  /
+
+Function created.
+
+SQL> select total_accd(2008) from dual;
+
+TOTAL_ACCD(2008)
+----------------
+               2
+
+SQL> select total_accd(2025) from dual;
+
+TOTAL_ACCD(2025)
+----------------
+               2
+
+SQL> select total_accd(2023) from dual;
+
+TOTAL_ACCD(2023)
+----------------
+               1 
+
+
+SQL> create or replace procedure accident_info(location_value in varchar) IS
+  begin
+        for accident_rec in
+       (select * from accident where location = location_value) loop
+            dbms_output.put_line('Report Number: ' || accident_rec.report_number || ', Date: ' || accident_rec.accd_date || ', Location: ' || accident_rec.location);
+       end loop;
+    end;
+    /
+ create or replace procedure accident_info(location_value in varchar) IS
+  2  begin for accident_rec in
+  3  (select * from ACCIDENT where location = location_value) loop
+  4  DBMS_OUTPUT.PUT_LINE('report number : ' || accident_rec.report_number || ', date : ' || accident_
+rec.accd_date || ', location: ' || accident_rec.location);
+  5  end loop;
+  6  end;
+  7  /
+
+Procedure created.
+
+SQL> execute accident_info('MIT');
+
+PL/SQL procedure successfully completed.
+
+SQL> execute accident_info('kmc');
+
+PL/SQL procedure successfully completed.
+
+SQL> commit;
+
+Commit complete.
