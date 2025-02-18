@@ -1,0 +1,772 @@
+	create or replace procedure accident_info(location_value in varchar) is
+   	 begin
+    	for acc_rec in
+    	(select * from ACCIDENT where location = location_value) LOOP
+    	dbms_output.put_line('report number: ' || acc_rec.report_number || ', date: ' || 	TO_CHAR(acc_rec.
+	accd_date,'DD-MON-YYYY') || ', location: ' || acc_rec.location);
+   	end LOOP;
+   	end;
+   	/
+	create or replace procedure getdriverwithoutacc as
+    	begin
+    	for rec in
+    	( select p.driverid , p.name , p.address
+    	from PERSON p
+   	left join PARTICIPATED pa ON p.driverid = pa.driverid
+    	where pa.report_number is null) LOOP
+    	dbms_output.put_line('driver id :' || rec.driverid || ' , name: ' || rec.name|| 	' , address: ' || rec.address);
+   	end LOOP;
+   	end;
+   	/
+
+
+
+CREATE OR REPLACE FUNCTION gettotalaccidentsbyregno(p_regno IN VARCHAR2)
+RETURN NUMBER
+IS
+    v_total_accidents NUMBER := 0; -- Initialize to 0
+BEGIN
+    SELECT COUNT(*)
+    INTO v_total_accidents
+    FROM participated
+    WHERE REGNO = p_regno;
+
+    RETURN v_total_accidents;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN 0; -- Return 0 for any error
+END;
+/
+
+ DBMS_OUTPUT.PUT_LINE('Driver Name: ' || v_driver_name);
+    DBMS_OUTPUT.PUT_LINE('Driver Address: ' || v_driver_address);
+    DBMS_OUTPUT.PUT_LINE('Car Registration Number: ' || :NEW.REGNO);
+    DBMS_OUTPUT.PUT_LINE('Report Number: ' || :NEW.REPORT_NUMBER);
+    DBMS_OUTPUT.PUT_LINE('Damage Amount: ' || :NEW.DAMAGE_AMOUNT);
+
+
+CREATE OR REPLACE TRIGGER trg_display_driver_info
+AFTER INSERT ON participated
+FOR EACH ROW
+DECLARE
+    v_driver_name VARCHAR2(100);
+    v_driver_address VARCHAR2(255);
+BEGIN
+    SELECT NAME, ADDRESS
+    INTO v_driver_name, v_driver_address
+    FROM person
+    WHERE DRIVERID = :NEW.DRIVERID;
+
+    DBMS_OUTPUT.PUT_LINE('Driver ID: ' || :NEW.DRIVERID);
+    DBMS_OUTPUT.PUT_LINE('Driver Name: ' || v_driver_name);
+    DBMS_OUTPUT.PUT_LINE('Driver Address: ' || v_driver_address);
+    DBMS_OUTPUT.PUT_LINE('Car Registration Number: ' || :NEW.REGNO);
+    DBMS_OUTPUT.PUT_LINE('Report Number: ' || :NEW.REPORT_NUMBER);
+    DBMS_OUTPUT.PUT_LINE('Damage Amount: ' || :NEW.DAMAGE_AMOUNT);
+END;
+/
+
+
+ CREATE OR REPLACE TRIGGER update_total_damage
+   AFTER
+     INSERT OR DELETE ON PARTICIPATED
+   BEGIN
+     UPDATE ACCIDENT
+     SET
+       total_damage = (
+         SELECT
+           SUM(damage_amount)
+         FROM PARTICIPATED p
+         WHERE
+           p.report_number = ACCIDENT.report_number
+      );
+   END;
+  /
+
+Trigger created.
+ CREATE OR REPLACE TRIGGER update_total_damage
+    AFTER
+  3   INSERT OR DELETE ON PARTICIPATED
+    BEGIN
+  5    UPDATE ACCIDENT
+  6    SET
+  7      total_damage = (
+  8        SELECT
+  9          SUM(damage_amount)
+ 10        FROM PARTICIPATED p
+ 11        WHERE
+ 12          p.report_number = ACCIDENT.report_number
+ 13      );
+ 14  END;
+ 15  /
+
+Trigger created.
+
+SQL> INSERT INTO
+        PARTICIPATED (driver_id#, regno, report_number, damage_amount)
+      VALUES
+        ('1235', 'EFGH2001', 1, 5000);
+Driver_id: 1235 Name: Rohit Address: BanglalSQL> select table_name from user_tables;
+
+TABLE_NAME
+--------------------------------------------------------------------------------
+ACCIDENT
+APPOINT
+BOOKADOPTION
+CAR
+COURSE
+DOCTOR
+ENROLL
+OWNS
+PARTICIPATED
+PATIENT
+PERSON
+
+TABLE_NAME
+--------------------------------------------------------------------------------
+STUDENT
+TEXT
+
+13 rows selected.
+
+SQL> create or replace trigger driver_info
+  2  after insert on PARTICIPATED
+  3  for each row
+  4  declare
+  5  id varchar(30);
+  6  nam varchar(50);
+  7  add varchar(100);
+  8  begin
+  9  select driverid , name , address into id , nam , add
+ 10  from PERSON
+ 11  where :new.driverid = PERSON.driverid;
+ 12  dbms_output.put_line('Driver id : ' ||id|||, name : ||nam|| ' address:' ||add);
+ 13  end;
+ 14  /
+
+Warning: Trigger created with compilation errors.
+
+SQL> insert into ACCIDENT values(35 , '24-FEB-23' , 'Delhi');
+
+1 row created.
+
+SQL> insert into PARTICIPATED values (2309 , 230953374 , 35 , 50000);
+insert into PARTICIPATED values (2309 , 230953374 , 35 , 50000)
+            *
+ERROR at line 1:
+ORA-04098: trigger 'CCE230953374.DRIVER_INFO' is invalid and failed
+re-validation
+
+
+SQL> create or replace procedure tot_damage
+  2  (driver in varchar2 , year in number) is
+  3  damage number := 0;
+  4  begin
+  5  select nvl(sum(pa.damage_amount),0) into damage
+  6  from PARTICIPATED pa
+  7  join ACCIDENT ac on pa.report_number = ac.report_number
+  8  where pa.driverid = driver
+  9  and extract(year from ac.accd_date) = year ;
+ 10  dbms_ouput.put_line('total damage : ' || damage);
+ 11  exception
+ 12  when no_data_found then
+ 13  dbms_output.put_line("no data found for the given driver and year');
+ 14  when others then
+ 15  dbms_output.put_line('an error occured' || SQLERRM);
+ 16  end;
+ 17  /
+
+Warning: Procedure created with compilation errors.
+
+SQL> execute('2309',2025);
+BEGIN ('2309',2025); END;
+
+             *
+ERROR at line 1:
+ORA-06550: line 1, column 14:
+PLS-00103: Encountered the symbol "," when expecting one of the following:
+* & = - + < / > at in is mod remainder not rem
+<an exponent (**)> <> or != or ~= >= <= <> and or like like2
+like4 likec as between || multiset member submultiset
+
+
+SQL> create or replace procedure accident_info(location_value in varchar) is
+  2  begin
+  3  for acc_rec in
+  4  (select * from ACCIDENT where location = location_value) LOOP
+  5  dbms_output.put_line('report number: ' || acc_rec.report_number || ', date: ' || TO_CHAR(acc_rec.
+accd_date,'DD-MON-YYYY') || ', location: ' || acc_rec.location);
+  6  end LOOP;
+  7  end;
+  8  /
+
+Procedure created.
+
+SQL> execute accident_info('MIT');
+
+PL/SQL procedure successfully completed.
+
+SQL> create or replace procedure accident_info(location_value in varchar) is
+  2  begin
+  3  for acc_rec in
+  4
+  5
+  6
+  7  /
+
+Warning: Procedure created with compilation errors.
+
+SQL> set serveroutput on;
+SQL> create or replace procedure accident_info(location_value in varchar) is
+  2  begin
+  3  for acc_rec in
+  4  (select * from ACCIDENT where location = location_value) LOOP
+  5  dbms_output.put_line('report number: ' || acc_rec.report_number || ', date: ' || TO_CHAR(acc_rec.accd_date,'DD-MON-YYYY') || ', location: ' || acc_rec.location);
+  6  end LOOP;
+  7  end;
+  8  /
+
+Procedure created.
+
+SQL> execute('MIT');
+BEGIN ('MIT'); END;
+
+            *
+ERROR at line 1:
+ORA-06550: line 1, column 13:
+PLS-00103: Encountered the symbol ")" when expecting one of the following:
+* & = - + < / > at in is mod remainder not rem
+<an exponent (**)> <> or != or ~= >= <= <> and or like like2
+like4 likec as between || multiset member submultiset
+
+
+SQL> SER SERVEROUTPUT ON;
+SP2-0734: unknown command beginning "SER SERVER..." - rest of line ignored.
+SQL> SET SERVEROUTPUT ON;
+SQL> create or replace procedure accident_info(location_value in varchar) is
+  2              begin
+  3             for acc_rec in
+  4             (select * from ACCIDENT where location = location_value) LOOP
+  5             dbms_output.put_line('report number: ' || acc_rec.report_number || ', date: ' ||      TO_CHAR(acc_rec.
+  6     accd_date,'DD-MON-YYYY') || ', location: ' || acc_rec.location);
+  7             end LOOP;
+  8             end;
+  9             /
+
+Procedure created.
+
+SQL> EXECUTE('MIT');
+BEGIN ('MIT'); END;
+
+            *
+ERROR at line 1:
+ORA-06550: line 1, column 13:
+PLS-00103: Encountered the symbol ")" when expecting one of the following:
+* & = - + < / > at in is mod remainder not rem
+<an exponent (**)> <> or != or ~= >= <= <> and or like like2
+like4 likec as between || multiset member submultiset
+
+
+SQL> execute accident_info('MIT');
+report number: 7, date: 21-JAN-2025, location: MIT
+
+PL/SQL procedure successfully completed.
+
+SQL> execute tot_damage('2309' ,2025);
+BEGIN tot_damage('2309' ,2025); END;
+
+      *
+ERROR at line 1:
+ORA-06550: line 1, column 7:
+PLS-00905: object CCE230953374.TOT_DAMAGE is invalid
+ORA-06550: line 1, column 7:
+PL/SQL: Statement ignored
+
+
+SQL> create or replace procedure getdriverwithoutacc as
+  2  begin
+  3  for rec in
+  4  ( select p.driverid , p.name , p.address
+  5  from PERSON p
+  6  left join PARTICIPATED pa ON p.driverid = pa.driverid
+  7  where pa.report_number is null) LOOP
+  8  dbms_output.put_line('driver id :' || rec.driverid || ' , name: ' || rec.name|| ' , address: ' ||
+rec.address);
+  9  end LOOP;
+ 10  end;
+ 11  /
+
+Procedure created.
+
+SQL> SET SERVEROUTPUT ON;
+SQL> create or replace procedure accident_info(location_value in varchar) is
+  2              begin
+  3             for acc_rec in
+  4             (select * from ACCIDENT where location = location_value) LOOP
+  5             dbms_output.put_line('report number: ' || acc_rec.report_number || ', date: ' ||      TO_CHAR(acc_rec.
+  6     accd_date,'DD-MON-YYYY') || ', location: ' || acc_rec.location);
+  7             end LOOP;
+  8             end;
+  9             /
+
+Procedure created.
+
+SQL>    create or replace procedure getdriverwithoutacc as
+  2             begin
+  3             for rec in
+  4             ( select p.driverid , p.name , p.address
+  5             from PERSON p
+  6             left join PARTICIPATED pa ON p.driverid = pa.driverid
+  7             where pa.report_number is null) LOOP
+  8             dbms_output.put_line('driver id :' || rec.driverid || ' , name: ' || rec.name||       ' , address: ' || rec.address);
+  9             end LOOP;
+ 10             end;
+ 11             /
+
+Procedure created.
+
+SQL> exec getdriverwithoutacc;
+driver id :2310 , name: Suvan , address: Manipur
+
+PL/SQL procedure successfully completed.
+
+SQL> SET SERVEROUTPUT ON;
+SQL> create or replace function gettotalacc(p_regno in varchar)
+  2  return number
+  3  is
+  4  v_total_acc number := 0;
+  5  begin
+  6  select count(*)
+  7  into v_total_acc
+  8  from PARTICIPATED
+  9  where regno = p_regno;
+ 10  return v_total_acc;
+ 11  exception
+ 12  where others then
+ 13  return 0;
+ 14  end;
+ 15  /
+
+Warning: Function created with compilation errors.
+
+SQL> show errors;
+Errors for FUNCTION GETTOTALACC:
+
+LINE/COL ERROR
+-------- -----------------------------------------------------------------
+12/1     PLS-00103: Encountered the symbol "WHERE" when expecting one of
+         the following:
+         pragma when
+         The symbol "when was inserted before "WHERE" to continue.
+
+SQL> select gettotalacc('230953374') as total_acc from dual;
+select gettotalacc('230953374') as total_acc from dual
+       *
+ERROR at line 1:
+ORA-06575: Package or function GETTOTALACC is in an invalid state
+
+
+SQL> SET SERVEROUPUT ON;
+SP2-0735: unknown SET option beginning "SERVEROUPU..."
+SQL> SET SERVEROUTPUT ON;
+SQL> CREATE OR REPLACE FUNCTION gettotalaccidentsbyregno(p_regno IN VARCHAR2)
+  2  RETURN NUMBER
+  3  IS
+  4      v_total_accidents NUMBER := 0; -- Initialize to 0
+  5  BEGIN
+  6      SELECT COUNT(*)
+  7      INTO v_total_accidents
+  8      FROM participated
+  9      WHERE REGNO = p_regno;
+ 10
+ 11      RETURN v_total_accidents;
+ 12  EXCEPTION
+ 13      WHEN OTHERS THEN
+ 14          RETURN 0; -- Return 0 for any error
+ 15  END;
+ 16  /
+
+Function created.
+
+SQL> SELECT GetTotalAccidentsByRegno('230953374') AS Total_Accidents
+  2  FROM dual;
+
+TOTAL_ACCIDENTS
+---------------
+              3
+
+SQL> create or replace trigger trg_display_driver_info
+  2  after insert on PARTICIPATED
+  3  for each row
+  4  declare
+  5  v_driver_name varchar(100);
+  6  v_driver_address varchar(255);
+  7  begin
+  8  select name , address
+  9  into v_driver_name , v_driver_address
+ 10  from PERSON
+ 11  where driverid = new.driverid;
+ 12  dbms_ourput.put_line('driver id: ' || : new.driverid);
+ 13   DBMS_OUTPUT.PUT_LINE('Driver Name: ' || v_driver_name);
+ 14      DBMS_OUTPUT.PUT_LINE('Driver Address: ' || v_driver_address);
+ 15      DBMS_OUTPUT.PUT_LINE('Car Registration Number: ' || :NEW.REGNO);
+ 16      DBMS_OUTPUT.PUT_LINE('Report Number: ' || :NEW.REPORT_NUMBER);
+ 17      DBMS_OUTPUT.PUT_LINE('Damage Amount: ' || :NEW.DAMAGE_AMOUNT);
+ 18  end;
+ 19  /
+
+Warning: Trigger created with compilation errors.
+
+SQL> CREATE OR REPLACE TRIGGER trg_display_driver_info
+  2  AFTER INSERT ON participated
+  3  FOR EACH ROW
+  4  DECLARE
+  5      v_driver_name VARCHAR2(100);
+  6      v_driver_address VARCHAR2(255);
+  7  BEGIN
+  8      SELECT NAME, ADDRESS
+  9      INTO v_driver_name, v_driver_address
+ 10      FROM person
+ 11      WHERE DRIVERID = :NEW.DRIVERID;
+ 12
+ 13      DBMS_OUTPUT.PUT_LINE('Driver ID: ' || :NEW.DRIVERID);
+ 14      DBMS_OUTPUT.PUT_LINE('Driver Name: ' || v_driver_name);
+ 15      DBMS_OUTPUT.PUT_LINE('Driver Address: ' || v_driver_address);
+ 16      DBMS_OUTPUT.PUT_LINE('Car Registration Number: ' || :NEW.REGNO);
+ 17      DBMS_OUTPUT.PUT_LINE('Report Number: ' || :NEW.REPORT_NUMBER);
+ 18      DBMS_OUTPUT.PUT_LINE('Damage Amount: ' || :NEW.DAMAGE_AMOUNT);
+ 19  END;
+ 20  /
+
+Trigger created.
+
+SQL> INSERT INTO PARTICIPATED (DRIVERID , REGNO , REPORT_NUMBER , DAMAGE_AMOUNT) 2 VALUES(2309 , '2309
+53374' , 80000);
+INSERT INTO PARTICIPATED (DRIVERID , REGNO , REPORT_NUMBER , DAMAGE_AMOUNT) 2 VALUES(2309 , '230953374' , 80000)
+                                                                            *
+ERROR at line 1:
+ORA-00926: missing VALUES keyword
+
+
+SQL> INSERT INTO PARTICIPATED (DRIVERID , REGNO , REPORT_NUMBER , DAMAGE_AMOUNT)  VALUES(2309 , '23095
+3374' , 80000);
+INSERT INTO PARTICIPATED (DRIVERID , REGNO , REPORT_NUMBER , DAMAGE_AMOUNT)  VALUES(2309 , '230953374' , 80000)
+                                                                             *
+ERROR at line 1:
+ORA-00947: not enough values
+
+
+SQL> INSERT INTO PARTICIPATED (DRIVERID , REGNO , REPORT_NUMBER , DAMAGE_AMOUNT) 2 VALUES(2309 , '230953374' , 80000);
+INSERT INTO PARTICIPATED (DRIVERID , REGNO , REPORT_NUMBER , DAMAGE_AMOUNT) 2 VALUES(2309 , '230953374' , 80000)
+                                                                            *
+ERROR at line 1:
+ORA-00926: missing VALUES keyword
+
+
+SQL> insert into PARTICIPATED values(2309 , '230953374' , 80000);
+insert into PARTICIPATED values(2309 , '230953374' , 80000)
+            *
+ERROR at line 1:
+ORA-00947: not enough values
+
+
+SQL> insert into PARTICIPATED values(2309 , '230953374' , 40,80000);
+insert into PARTICIPATED values(2309 , '230953374' , 40,80000)
+            *
+ERROR at line 1:
+ORA-04098: trigger 'CCE230953374.DRIVER_INFO' is invalid and failed
+re-validation
+
+
+SQL> insert into PARTICIPATED values(2309 , '230953374' , 7,100000);
+insert into PARTICIPATED values(2309 , '230953374' , 7,100000)
+            *
+ERROR at line 1:
+ORA-04098: trigger 'CCE230953374.DRIVER_INFO' is invalid and failed
+re-validation
+
+
+SQL> insert into PARTICIPATED values(2309 , 230953374 , 7,100000);
+insert into PARTICIPATED values(2309 , 230953374 , 7,100000)
+            *
+ERROR at line 1:
+ORA-04098: trigger 'CCE230953374.DRIVER_INFO' is invalid and failed
+re-validation
+
+
+SQL> insert into PARTICIPATED(driverid , regno , report values(2309 , 230953374 , 7,100000);
+insert into PARTICIPATED(driverid , regno , report values(2309 , 230953374 , 7,100000)
+                                                   *
+ERROR at line 1:
+ORA-00917: missing comma
+
+
+SQL> insert into PARTICIPATED(driverid , regno , report_number ,damage_amount) values(2309 , 230953374
+ , 7,100000);
+insert into PARTICIPATED(driverid , regno , report_number ,damage_amount) values(2309 , 230953374 , 7,100000)
+            *
+ERROR at line 1:
+ORA-04098: trigger 'CCE230953374.DRIVER_INFO' is invalid and failed
+re-validation
+
+
+SQL> insert into PARTICIPATED(driverid , regno , report_number ,damage_amount) 2 values(2309 , 2309533
+74 , 7,100000);
+insert into PARTICIPATED(driverid , regno , report_number ,damage_amount) 2 values(2309 , 230953374 , 7,100000)
+                                                                          *
+ERROR at line 1:
+ORA-00926: missing VALUES keyword
+
+
+SQL> insert into PARTICIPATED(driverid , regno , report_number ,damage_amount)  values (2309 , 2309533
+74 , 7,100000);
+insert into PARTICIPATED(driverid , regno , report_number ,damage_amount)  values (2309 , 230953374 , 7,100000)
+            *
+ERROR at line 1:
+ORA-04098: trigger 'CCE230953374.DRIVER_INFO' is invalid and failed
+re-validation
+
+
+SQL>  CREATE OR REPLACE TRIGGER update_total_damage
+  2     AFTER
+  3       INSERT OR DELETE ON PARTICIPATED
+  4     BEGIN
+  5       UPDATE ACCIDENT
+  6       SET
+  7         total_damage = (
+  8           SELECT
+  9             SUM(damage_amount)
+ 10           FROM PARTICIPATED p
+ 11           WHERE
+ 12             p.report_number = ACCIDENT.report_number
+ 13        );
+ 14     END;
+ 15    /
+
+Warning: Trigger created with compilation errors.
+
+SQL> ALTER TABLE ACCIDENT ADD total_damage INT DEFAULT 0;
+
+Table altered.
+
+SQL>
+SQL>
+SQL> CREATE OR REPLACE TRIGGER update_total_damage
+  2  AFTER INSERT OR DELETE ON PARTICIPATED
+  3  FOR EACH ROW
+  4  BEGIN
+  5    IF INSERTING THEN
+  6      UPDATE ACCIDENT
+  7      SET total_damage = total_damage + :NEW.damage_amount
+  8      WHERE report_number = :NEW.report_number;
+  9    ELSIF DELETING THEN
+ 10      UPDATE ACCIDENT
+ 11      SET total_damage = total_damage - :OLD.damage_amount
+ 12      WHERE report_number = :OLD.report_number;
+ 13    END IF;
+ 14  END;
+ 15  /
+
+Trigger created.
+
+SQL> insert into participated values(2309, 230953374 , 7 , 100000);
+insert into participated values(2309, 230953374 , 7 , 100000)
+            *
+ERROR at line 1:
+ORA-04098: trigger 'CCE230953374.DRIVER_INFO' is invalid and failed
+re-validation
+
+
+SQL> SELECT
+  2            p.driverid,
+  3            o.regno,
+  4            SUM(pa.damage_amount) AS total_damage
+  5        FROM
+  6            PARTICIPATED pa
+  7        JOIN
+  8            OWNS o ON pa.driverid = o.driverid#      JOIN
+  9            PERSON p ON o.driverid = p.driverid
+ 10        GROUP BY
+ 11            p.driverid, o.regno
+ 12        HAVING
+ 13            SUM(pa.damage_amount) > 10000;
+          OWNS o ON pa.driverid = o.driverid#      JOIN
+                                  *
+ERROR at line 8:
+ORA-00904: "O"."DRIVERID#": invalid identifier
+
+
+SQL> ^FSELECT
+SP2-0042: unknown command "SELECT" - rest of line ignored.
+SQL>           p.driverid,
+SP2-0734: unknown command beginning "p.driverid..." - rest of line ignored.
+SQL>           o.regno,
+SP2-0042: unknown command "o.regno," - rest of line ignored.
+SQL>           SUM(pa.damage_amount) AS total_damage
+SP2-0734: unknown command beginning "SUM(pa.dam..." - rest of line ignored.
+SP2-0044: For a list of known commands enter HELP
+and to leave enter EXIT.
+SQL>       FROM
+SP2-0042: unknown command "FROM" - rest of line ignored.
+SQL>           PARTICIPATED pa
+SP2-0734: unknown command beginning "PARTICIPAT..." - rest of line ignored.
+SQL>       JOIN
+SP2-0042: unknown command "JOIN" - rest of line ignored.
+SQL>           OWNS o ON pa.driverid = o.driverid      JOIN
+SP2-0734: unknown command beginning "OWNS o ON ..." - rest of line ignored.
+SP2-0044: For a list of known commands enter HELP
+and to leave enter EXIT.
+SQL>           PERSON p ON o.driverid = p.driverid
+SP2-0734: unknown command beginning "PERSON p O..." - rest of line ignored.
+SQL>       GROUP BY
+SP2-0042: unknown command "GROUP BY" - rest of line ignored.
+SQL>           p.driverid, o.regno
+SP2-0734: unknown command beginning "p.driverid..." - rest of line ignored.
+SQL>       HAVING
+SP2-0042: unknown command "HAVING" - rest of line ignored.
+SP2-0044: For a list of known commands enter HELP
+and to leave enter EXIT.
+SQL>           SUM(pa.damage_amount) > 10000;
+SP2-0734: unknown command beginning "SUM(pa.dam..." - rest of line ignored.
+SQL> select
+  2            p.driverid,
+  3            o.regno,
+  4            SUM(pa.damage_amount) AS total_damage
+  5        from
+  6            PARTICIPATED pa
+  7        join
+  8            OWNS o ON pa.driverid = o.driverid      JOIN
+  9            PERSON p ON o.driverid = p.driverid
+ 10        group by
+ 11            p.driverid, o.regno
+ 12        having
+ 13            SUM(pa.damage_amount) > 10000;
+
+DRIVERID                       REGNO                TOTAL_DAMAGE
+------------------------------ -------------------- ------------
+2309                           230953374                  350000
+2312                           230953399                   75000
+2313                           230953364                   25000
+2311                           230953300                   50000
+
+SQL> select model from
+  2
+SQL>
+SQL> select c.model , sum(p.damage_amount)
+  2  from CARS c join PARTICIPATED p ON c.regno = c.regno
+  3  where count(p.regno)>1;
+where count(p.regno)>1
+      *
+ERROR at line 3:
+ORA-00934: group function is not allowed here
+
+
+SQL> select c.model , sum(p.damage_amount)
+  2  from CARS c join PARTICIPATED p ON c.regno = p.regno
+  3  where count(p.regno)>1;
+where count(p.regno)>1
+      *
+ERROR at line 3:
+ORA-00934: group function is not allowed here
+
+
+SQL> select c.model , sum(p.damage_amount)
+  2  from CARS c left join PARTICIPATED p ON c.regno = p.regno
+  3  where count(p.regno)>1
+  4  group by p.regno;
+where count(p.regno)>1
+      *
+ERROR at line 3:
+ORA-00934: group function is not allowed here
+
+
+SQL> select c.model , sum(p.damage_amount)
+  2  from CARS c natural join PARTICIPATED p
+  3  group by p.regno
+  4  having count(p.regno)>1;
+from CARS c natural join PARTICIPATED p
+     *
+ERROR at line 2:
+ORA-00942: table or view does not exist
+
+
+SQL> select regno , sum(damage_amount) as total_damage from PARTICIPATED WHERE count(regno)>1;
+select regno , sum(damage_amount) as total_damage from PARTICIPATED WHERE count(regno)>1
+                                                                          *
+ERROR at line 1:
+ORA-00934: group function is not allowed here
+
+
+SQL> select regno , sum(damage_amount) as total_damage from PARTICIPATED group by regno having count(r
+egno)>1;
+
+REGNO                TOTAL_DAMAGE
+-------------------- ------------
+230953374                  350000
+
+SQL> select a.location , avg(p.damage_amount) as average_damage
+  2  from ACCIDENT a natural join PARTICIPATED p
+  3  group by a.location ;
+
+LOCATION                                           AVERAGE_DAMAGE
+-------------------------------------------------- --------------
+MITBLR                                                      50000
+BITS                                                        75000
+NIH                                                        200000
+kmc                                                         25000
+
+SQL> select * from ACCIDENT;
+
+REPORT_NUMBER ACCD_DATE LOCATION
+------------- --------- --------------------------------------------------
+TOTAL_DAMAGE
+------------
+            7 21-JAN-25 MIT
+           0
+
+           12 20-JAN-25 kmc
+           0
+
+           15 21-JAN-23 MITBLR
+           0
+
+
+REPORT_NUMBER ACCD_DATE LOCATION
+------------- --------- --------------------------------------------------
+TOTAL_DAMAGE
+------------
+            1 21-JAN-21 BITS
+           0
+
+           35 24-FEB-23 Delhi
+           0
+
+           28 28-JAN-08 NIH
+           0
+
+
+REPORT_NUMBER ACCD_DATE LOCATION
+------------- --------- --------------------------------------------------
+TOTAL_DAMAGE
+------------
+           32 21-JAN-09 BITS
+           0
+
+           31 21-JAN-08 BITS
+           0
+
+
+8 rows selected.
+
+SQL> select * from PARTICIPATED;
+
+DRIVERID                       REGNO                REPORT_NUMBER DAMAGE_AMOUNT
+------------------------------ -------------------- ------------- -------------
+2313                           230953364                       12         25000
+2312                           230953399                        1         75000
+2311                           230953300                       15         50000
+2309                           230953374                       28        200000
+2309                           230953374                       32         75000
+2309                           230953374                       31         75000
+
+6 rows selected.
